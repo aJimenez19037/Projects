@@ -1,0 +1,311 @@
+#include "population.hpp"
+
+Population::Population (string affiliations)//constructing population from string
+  {
+    size = affiliations.size();
+    char pos = '+';
+    char neg = '-';
+    char div = '/';
+    for (int i = 0;i<size;i++)
+      {
+        if (affiliations.at(i) == pos)
+          {
+            Voter voter(i,1);
+            voters.push_back(voter);
+            positive++;
+          }
+        else if (affiliations.at(i) == neg)
+          {
+            Voter voter(i,-1);
+            voters.push_back(voter);
+            negative++;
+          }
+        else if (affiliations.at(i) == div)//undecided
+          {
+            Voter voter(i,0);
+            voters.push_back(voter);
+            undecided++;
+          }
+        else {}//we dont allow weirdos to vote
+      }
+    if(positive > negative){
+      lean = 1;
+      majority = positive/size;}
+    else if (negative > positive){
+      lean = -1;
+      majority = negative/size;}
+    else if (positive == negative){
+      lean = 0;
+      majority = .5;}    
+  }
+
+Population::Population (int population_size, int lean, double majority)//construct random popu based on inputs
+  {
+    size = population_size;
+    this->lean = lean;
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> distribution(0.,1.);
+    double random_number = distribution(generator);
+
+    if (majority > 1) // assume given as percentage
+      majority = majority/100;
+    if (lean == 1){
+      for (int i = 0;i<size;i++){
+	do{
+	  random_number = distribution(generator);
+	  if (random_number<majority){//if majority is 60% we want 60 percent to have the association of the lean
+	    Voter voter(i,1);
+	    voters.push_back(voter);
+	    positive++;
+	  }
+	  else if (random_number>majority){
+	    Voter voter(i,-1);//we want the other 40% to have opposite association
+	    voters.push_back(voter);
+	    negative++;
+	  }
+	}while (positive<negative);
+      }
+      this -> majority = positive/size;
+    }
+    else if (lean == -1)
+      {
+	for (int i = 0;i<size;i++)
+	  {
+            do
+              {
+                float random_number = distribution(generator);
+                if (random_number<majority)//if majority is 60% we want 60 percent to have the association of the lean
+                  {
+                    Voter voter(i,-1);
+                    voters.push_back(voter);
+		    negative++;
+                  }
+                else
+                  {
+                    Voter voter(i,1);//we want the other 40% to have opposite association
+                    voters.push_back(voter);
+		    positive++;
+		  }
+              }while (positive>negative);
+	  }
+	this -> majority = negative/size;
+      }
+  }
+Population::Population (vector<Voter>listOfVoters)//constructing out of a vector of voters
+  {
+    voters = listOfVoters;
+    size = listOfVoters.size();
+    for (int i = 0;i<size;i++)
+      {
+        int currentAffiliation = listOfVoters.at(i).getAffiliation();
+        if (currentAffiliation == 1)
+          {positive++;}
+        else if (currentAffiliation == -1)
+          {negative++;}
+        else if (currentAffiliation == 0)//undecided
+          {undecided++;}
+      }
+    if(positive > negative){
+      lean = 1;
+      majority = positive/size;}
+    else if (negative > positive){
+      lean = -1;
+      majority = negative/size; 
+    }
+    else if (positive == negative){
+      lean = 0;
+    }
+  }
+/*
+Population Population::sub (int first, int last)//create sub district out of the bigger distric. Inputs are the first and last voter.
+  {
+    vector<Voter> newVoters = {voters.begin()+first, voters.begin()+last};
+    Population newPopulation(newVoters);
+    return newPopulation;//we might want to have a vector with all the different subdistricts in the future
+  }
+*/
+vector<Voter> Population::sub (int first, int last)//create sub district out of the bigger distric. Inputs are the first and last voter.
+{
+  vector<Voter> newVoters = {voters.begin()+first, voters.begin()+last};
+  return newVoters;
+}
+Voter Population::getVoter(int i)
+{
+  return voters.at(i);
+}
+void Population::print()
+{
+
+  // cout << "..Size: " << size << "\n";
+  //cout << "..Lean:" << lean << "\n";
+  // cout << "..Majority: " << majority << "\n";
+  //cout << "..Positive: " << positive << "\n";
+  //cout << "..Negative: " << negative << "\n";
+  //cout << "Voters affiliations: ";
+  //for(int i = 0;i< size;i++)
+  //{
+  //  cout << voters.at(i).getAffiliation() << ", ";
+  //}
+  cout << "-----------------     Population    ---------------- \n";
+  cout << "[ ";
+  for (int i = 0; i<size;i++)
+    {
+      cout << i << ":" << voters.at(i).getAffiliation() << " , ";
+    }
+  cout << " ] \n";
+  cout << "Difference: "<< abs(positive - negative) << "\n";
+
+}
+void Population::updateGerryFinal(Districting gerryFinal)
+{
+  this -> gerryFinal = gerryFinal;
+}
+void Population::minority_rules( int ndistricts )
+{
+
+ //Notes: Flipped the signs < and > when differences are equal 
+ //I was thinking if we should count undecided districts. I dont think so tho. If its undecided it will go uncounted for. It will neither benefit nor hinder the difference. So when comparing it will indirectly be taken into account 
+ // this -> print();
+  int largestDiff = -10000;
+  int pLargestDiff = 0;
+  int pLD_NegativeCount = 0;
+  int pLD_PositiveCount = 0;
+  District whole(voters);   
+  whole.print();
+  if (ndistricts == 1)
+    {
+      //add district to gerryFinal
+      gerryFinal.extend_with_new_district(whole);
+      gerryFinal.print();
+      //reverse the order of the districts because they are being added for right to left
+      gerryFinal.reverseDistricts(gerryFinal.getDistricts());
+      gerryFinal.print();
+      //return final gerry
+      // return gerryFinal;
+    }
+  else if (ndistricts > 1)
+    {
+      //slice
+      for (int p = 0;p<(size - 1);p++)
+	{
+	  /*make a district with right most, then 2 right most, then 3 ect linked to p*/
+	  District right = whole.sub(size-(p+1),size);
+	  /*make another district with all the other voters*/
+	  District left = whole.sub(0,size-(p+1));
+	  cout << "--------------------    Right    -------------------- \n";
+	  right.print();
+	  cout << "--------------------    Left     -------------------- \n";
+	  left.print();
+	  cout << "\n";
+	  //get number of positive and negative voters in right slice
+	  int districtPos = right.getPositive();
+	  int districtNeg = right.getNegative();
+
+	  int districtLPos = left.getPositive();
+          int districtLNeg = left.getNegative();
+
+	  Districting gerry;
+	  gerry.extend_with_new_district(left);
+	  gerry.extend_with_new_district(right);
+	  //get the number of positive or negative districts created by slicing
+	  int districtingPos = gerry.getPositive();
+	  int districtingNeg = gerry.getNegative();
+	  gerry.print();
+	  /*we want the biggest difference. Position in the vector differences will be same as p value*/
+	  if (lean == -1)
+	    {
+
+	      int difference = districtingPos - districtingNeg;
+    	      if (difference>largestDiff)//new p value provides better gerrymandering
+		{
+		  pLargestDiff = p;
+		  pLD_PositiveCount = districtPos;//keep track of best p values' minority count
+		  largestDiff = difference;
+		}
+	      else if (difference == largestDiff)//if two different slices result in the same difference 
+		{
+		  if (p<ndistricts)
+		    {
+		      if (pLD_PositiveCount > districtPos)//decide by taking the p with the least minority. Aka least wasted votes for the minority
+			//if new cut results in less minorities in that district then we want to replace old p with new p
+			{
+			  pLargestDiff = p;
+			  pLD_PositiveCount = districtPos;
+			}
+		    }
+		  else if (p>ndistricts)
+		    {
+		      if (pLD_PositiveCount > districtLPos)//decide by taking the p with the least minority. Aka least wasted votes for the minority
+			//if new cut results in less minorities in that district then we want to replace old p with new p
+			{
+			  pLargestDiff = p;
+			  pLD_PositiveCount = districtPos;
+			}
+		    }
+		}
+	    }
+	  else if (lean == 1)
+	    {
+	      //  cout << "P largest difference has " <<  pLD_NegativeCount << " negatives and p current has" << districtNeg << " negatives \n";
+	      int difference = districtingNeg - districtingPos;//minority - majority
+	      // cout << " largest difference is " << largestDiff << " and  current has a difference of" << difference << "\n";
+	      if (difference>largestDiff)
+		{
+		  pLargestDiff = p;
+		  pLD_NegativeCount = districtNeg;
+		  largestDiff = difference;
+		}
+	      else if (difference == largestDiff)
+		{
+		  if (p<ndistricts)
+                    {
+                      if (pLD_NegativeCount > districtNeg)//decide by taking the p with the least minority. Aka least wasted votes for the minority
+                        //if new cut results in less minorities in that district then we want to replace old p with new p
+                        {
+                          pLargestDiff = p;
+                          pLD_NegativeCount = districtNeg;
+                        }
+                    }
+                  else if (p>ndistricts)
+                    {
+                      if (pLD_NegativeCount > districtLNeg)//decide by taking the p with the least minority. Aka least wasted votes for the minority
+                        //if new cut results in less minorities in that district then we want to replace old p with new p
+                        {
+                          pLargestDiff = p;
+                          pLD_NegativeCount = districtNeg;
+                        }
+                    }
+		}//else if
+	    }//else if
+	}//for 
+
+      //so we have found the best p value for gerrymandering
+      //add right district to gerryFinal
+      cout << "-------------------   Final Slicing   -------------------\n ";
+      cout << "P: " << pLargestDiff << "\n";
+      cout << "PLD Negative count: " << pLD_NegativeCount << "\n";
+      cout << "PLD Positive count: " << pLD_PositiveCount << "\n";
+      if (p<ndistricts)
+	{
+	  District right = whole.sub(size-(pLargestDiff+1),size);
+	  gerryFinal.extend_with_new_district(right);
+	}
+      else if (p>ndistricts)
+	{
+	  District left = whole.sub(0,size-(pLargestDiff+1));
+	  gerryFinal.extend_with_new_district(right);
+	}
+     
+      //      make subpopulation out of left district
+      //      gerryFinal.print();
+
+      //Population newPopu = this -> sub(0, size-(pLargestDiff+1));
+      //with new subpopulation call the function again
+      //need to update newPupu gerryFinal
+      //      newPopu.updateGerryFinal(gerryFinal);
+      voters = this -> sub(0, size-(pLargestDiff+1));
+      size = voters.size();
+      this -> minority_rules(ndistricts-1);
+    }
+}
+

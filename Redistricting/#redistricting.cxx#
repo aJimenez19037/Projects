@@ -1,0 +1,90 @@
+/*
+Antonio Jimenez aoj268
+Kamilla Madera kjm4223
+Ceci Ngyuen dcn558
+assumptions:
+No undecided voters within the population
+those listed in the textbook
+notes to remember:
+when making sub districts/popu it excludes first number and includes second
+*/
+
+#include "districting.hpp"
+#include "population.hpp"
+int main ()
+{
+  /*
+  Voter a5(5,-1);
+  Voter a6(6,0);
+  Voter a7(7,1);
+  Voter a8(8,100);
+ 
+  cout << "Making district with one B voter" << '\n';
+  Voter nr5(5,+1);
+  District nine( nr5 );
+  nine.print();
+  cout << "Making district ABA" << '\n';
+  District ten( vector<Voter>
+   { {1,-1},{2,+1},{3,-1}
+    } );
+  ten.print();
+  cout << "Making district with string: ++++------- \n";
+  District eleven("++++-------");
+  eleven.print();
+  cout << "Making sub district: [1,3] \n";
+  District twelve = eleven.sub(1,3);
+  twelve.print();
+  //52.3
+  string pns( "-++--" );
+  Population some(pns);
+  cout << "Population from string " << pns << "\n";
+  some.print();
+  Population group=some.sub(1,3);
+  group.print();
+  Population random(10,-1,60);
+  random.print();
+  
+  //52.4
+  cout << "----------------------------- \n";
+  cout << "Making single voter population B" << "\n";
+  Population people( vector<Voter>{Voter(0,+1) } );
+  people.print();
+  Districting gerry;
+  cout << "District: " << "\n";
+  gerry.print();
+
+  //52.5
+  cout << "Add one B voter:" << "\n";
+  gerry.extend_with_new_district( people.getVoter(0) );
+  gerry.print();
+
+  cout << "add A A:" << "\n";
+  gerry.extend_last_district( Voter(1,-1) );
+  gerry.extend_last_district( Voter(2,-1) );
+  gerry.print();
+  
+  cout << "Add two B districts:" << "\n";
+  gerry.extend_with_new_district( Voter(3,+1) );
+  gerry.extend_with_new_district( Voter(4,+1) );
+  gerry.print();
+  */
+  //52.6
+  /*
+  Population random1(10,-1,60);
+  cout << "Redistricting population: \n";
+  cout << "\n";
+  random1.minority_rules(3);
+  //random1.gerryFinal.print();
+  
+  Population random2(50,-1,60);
+  cout << "Redistricting population: \n";
+  cout << "\n";
+  random2.minority_rules(3);
+  //random1.gerryFinal.print();
+  */
+  Population random3("---+-+--+");
+  cout << "Redistricting population: \n";
+  cout << "\n";
+  random3.minority_rules(3);
+  //random1.gerryFinal.print();  
+}
