@@ -13,6 +13,7 @@ Original population [1,1,1,-1,-1]
 Inputed districts = 3
 Output [[1,1,1][-1][-1]]
 
-As you can see the minority (-1) has two out of the three districts despite being .4 of the population. When scaled up using the population generator we can see redistricting strategies, such as packing/grouping. 
+As you can see the minority (-1) has two out of the three districts despite being .4 of the population.
+When scaled up using the population generator we can see redistricting strategies, such as packing/grouping. 
 ```
 
